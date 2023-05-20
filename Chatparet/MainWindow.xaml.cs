@@ -24,8 +24,6 @@ namespace ChatPalette
     /// </summary>
     public partial class MainWindow : Window
     {
-        EditLinesWindow EditWindow;
-
         //Dictionary<string, string> dicKeyPairs;
         //Lines辞書(変数を登録する辞書)を登録する辞書
         private Dictionary<string, Dictionary<string, string>> TabsDictionary;
@@ -42,9 +40,6 @@ namespace ChatPalette
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             saveInit();
-            // EditWindowがクローズ出来てなかったなら、閉じる。
-            if (EditWindow != null)
-                EditWindow.Close();
         }
 
         #region Sava&Lord関係
@@ -262,10 +257,8 @@ namespace ChatPalette
             string strFileAll = null;
             if (!loadFileAll(strFilePath, out strFileAll)) 
                 return false;
-
             DeleteAllTabs();
-            makeNewTabItem();
-            makeLines(strFileAll);
+            makeNewTab(null, strFileAll);
             return true; 
         }
 
@@ -287,12 +280,9 @@ namespace ChatPalette
             SaveData sd = new SaveData();
             sd = JsonSerializer.Deserialize<SaveData>(strFileAll);
 
-            foreach (DataChatPalette varTemp in sd.palettes)  // 1タブの処理
+            foreach (DataChatPalette varTemp in sd.palettes)  //各タブの処理
             {
-                makeNewTabItem();
-                makeLines(varTemp.stock);
-                changeLinesDictionaryTabName(getSelectedTabName(), varTemp.label);
-                setSelectedTabName(varTemp.label);
+                makeNewTab(varTemp.label, varTemp.stock);
             }
             return true;
         }
@@ -595,34 +585,35 @@ namespace ChatPalette
         #region TabItems関係
 
         /// <summary>
-        /// 新しいItemtabを生成。Tabs辞書に新しく作成した辞書を登録する。
-        /// ItemTabにScrollViewerを追加。
-        /// ScrollViewerにStackPanelを追加。
+        /// 新しいタブを作成。
         /// </summary>
-        private void makeNewTabItem()
+        /// <param name="strTabName">tab名。無ければ新しいtabの数字が入る</param>
+        /// <param name="strSentence">tabの本文。無ければ空欄</param>
+        public void makeNewTab(string strTabName, string strSentence)
         {
-            ScrollViewer scrollViewer = new ScrollViewer();
-            
-
-            scrollViewer.Content = new StackPanel();
-            string newTabName = "Tab";
-
+            string strNewTabName = strTabName;
+            TextBox tempTextBox = new TextBox()
+            {
+                Text = strSentence,
+                AcceptsReturn = true,
+                AcceptsTab = true
+            };
             // 新しいTab名を決定
-            for (int i = 0; ; i++)
-                if (!TabsDictionary.ContainsKey("Tab" + i.ToString()))
-                {
-                    newTabName = "Tab" + i.ToString();
-                    break;
-                }
+            //strTabNameが空欄だったら。
+            if (strNewTabName == null || strNewTabName == "") 
+            {
+                strNewTabName = Convert.ToString(TabControl.Items.Count+1);
+            }
+
             TabItem tab = new TabItem()
             {
-                Header = newTabName,
-                Content = scrollViewer
+                Header = strNewTabName,
+                Content = tempTextBox
             };
             TabControl.Items.Add(tab);
             tab.IsSelected = true;
-            makeNewLinesDictionary(tab.Header.ToString());
         }
+
 
         /// <summary>
         /// 　現在選択しているタブを削除する
@@ -777,61 +768,14 @@ namespace ChatPalette
             return strNewSentence;
         }
 
-
         /// <summary>
-        /// クリップボードにTextBoxのTextを張り付ける。
+        /// 新しいタブを作成し
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CopyToClipboard(object sender, RoutedEventArgs e)
-        {
-            string text = textbox.Text; // テキストボックスに入力されている値を取得する。
-            if (text != "")
-            {
-                Clipboard.SetData(DataFormats.Text, text);
-            }
-        }
-
-        /// <summary>
-        /// 現在選択されているタブのStackPanelにLineを作る。
-        /// </summary>
-        /// <param name="strLines"></param>
+        /// <param name="strSentence"></param>
         /// <returns></returns>
-        public int makeLines(string strLines)
+        public int makeTextEditter(string strSentence) 
         {
-            string[] anyStrLines;
-            // 現在選択しているTabItemのStackPaneまでのリンクを取得する。
-            if (TabControl.Items.Count > 0 && TabControl.SelectedIndex >= 0 && strLines != null)
-            {
-                var selectedTabItem = (TabItem)TabControl.Items[TabControl.SelectedIndex];
-                var tempScroll = (ScrollViewer)selectedTabItem.Content;
-                var tempStack = (StackPanel)tempScroll.Content;
 
-                deleteAllLines();
-                ClearLinesDictionary(selectedTabItem.Header.ToString());
-
-                // 文章を分解して、一行ごとのLineを作成する。
-                anyStrLines = strLines.Split("\n");
-                for (int i = 0; i < anyStrLines.Length; i++)
-                {
-                    string strTemp = anyStrLines[i];
-                    if (strTemp.EndsWith("\r"))
-                        strTemp = strTemp.TrimEnd('\r');
-                    // 追加するLinesの作成
-                    Button btnNew = new Button();
-                    btnNew.Content = strTemp;
-                    btnNew.Click += btnCopyToClip;
-                    tempStack.Children.Add(btnNew);
-
-                    // 変数登録処理
-                    if (strTemp.StartsWith("//"))
-                    {
-                        string key = null, value = null;
-                        parseString(strTemp, ref key, ref value);
-                        setWordToLinesDictionary(selectedTabItem.Header.ToString(), key, value);
-                    }
-                }
-            }
             return 0;
         }
 
@@ -896,32 +840,6 @@ namespace ChatPalette
             setToTextBox(tempBtn.Content.ToString());
         }
 
-
-        /// <summary>
-        /// Lineを編集する画面を出す。
-        /// 編集画面に必要な要素を渡す。
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btnOpenEditWindow(object sender, RoutedEventArgs e)
-        {
-            // タブがなければ編集画面は出さない。    
-            if (TabControl.Items.Count > 0 && TabControl.SelectedIndex >= 0)
-            {
-                EditWindow = new EditLinesWindow(this);
-                // 編集画面の表示位置を現在のウィンドウのx,y座標に合わせる。
-                EditWindow.Top = this.Top;
-                EditWindow.Left = this.Left;
-                EditWindow.Height = this.Height;
-                EditWindow.Width = this.Width;
-                EditWindow.setEditedTabName(getSelectedTabName());
-                EditWindow.setEditLines(composeLines(TabControl.SelectedIndex));
-                EditWindow.Show();
-                this.Hide();
-            }
-        }
-
-
         /// <summary>
         /// セーブボタンの関数。saveChatPalette関数を呼び出すだけ。
         /// </summary>
@@ -944,7 +862,7 @@ namespace ChatPalette
         /// <param name="e"></param>
         private void btnAddNewTab(object sender, RoutedEventArgs e)
         {
-            makeNewTabItem();
+            makeNewTab(null, null);
         }
 
         /// <summary>

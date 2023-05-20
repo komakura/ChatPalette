@@ -15,10 +15,8 @@
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="50"/>
             </Grid.ColumnDefinitions>
             <TextBox x:Name="textbox" Text="TextBox" Grid.Column="0" TextWrapping="NoWrap" FontSize="20" AcceptsReturn="True" AcceptsTab="True"/>
-            <Button Content="コピー" Grid.Column="1" Height="35" VerticalAlignment="Top" Click="CopyToClipboard" />
         </Grid>
         <TabControl x:Name="TabControl" Grid.Row="1">
         </TabControl>
@@ -28,7 +26,6 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0" Orientation="Horizontal">
-                <Button Content="編集" Margin="5,10,5,10" Click="btnOpenEditWindow"/>
                 <Button Content="セーブ" Margin="20,10,5,10" Click="btnSaveChatPalette"/>
                 <Button Content="ロード" Margin="5,10,5,10" Click="btnLoadChatPalette"/>
             </StackPanel>
