@@ -34,6 +34,7 @@ namespace ChatPalette
             InitializeComponent();
             TabsDictionary = new Dictionary<string, Dictionary<string, string>>();
             lordInit();
+            setWindowTitle("Chat Palette");
         }
 
         // MainWindowのクローズ処理
@@ -42,23 +43,31 @@ namespace ChatPalette
             saveInit();
         }
 
+        /// <summary>
+        /// ウィンドウのタイトルを設定する。ファイルを読み込んだ時に呼び出す。
+        /// </summary>
+        /// <param name="strNewTitle">新しいタイトル</param>
+        public void setWindowTitle(string strNewTitle)
+        {
+            top.Title = strNewTitle;
+        }
+
         #region Sava&Lord関係
 
         /// <summary>
         /// ファイルを開いて全文を取得する。
         /// </summary>
         /// <param name="strFilePath">開くファイルのパス</param>
-        /// <param name="strReturn">ファイルの内容を返す</param>
-        /// <returns>ファイルを開いて内容を取得できたか否か</returns>
-        public bool loadFileAll(string strFilePath, out string strReturn) 
+        /// <returns>ファイルの中身。失敗したらnullを返す</returns>
+        public string loadFile(string strFilePath) 
         {
-            strReturn = null;
+            string strReturn = null;
             try
             {
                 //Fileがあるかチェック。
                 FileInfo fInfo = new FileInfo(strFilePath);
                 if (!fInfo.Exists)
-                    return false;
+                    return strReturn;
 
                 using (Hnx8.ReadJEnc.FileReader reader = new Hnx8.ReadJEnc.FileReader(fInfo)) 
                 {
@@ -76,9 +85,9 @@ namespace ChatPalette
             catch (ArgumentException e)
             {
                 MessageBox.Show("LoadFileAll Error:01\n" + e.ToString());
-                return false;
+                return strReturn;
             }
-            return true;
+            return strReturn;
         }
 
         /// <summary>
@@ -87,7 +96,7 @@ namespace ChatPalette
         public void lordInit()
         {
             //String.Join("\r\n", File.ReadAllLines(filePath));
-            string strSettingAll=null, strFilePath=null;
+            string strSettingContents=null, strFilePath=null;
             DirectoryInfo dirTemp;
             //fileがあるかのチェック
             try
@@ -104,10 +113,11 @@ namespace ChatPalette
             }
 
             // Load SettingFile
-            if (loadFileAll(strFilePath, out strSettingAll)) // fileあり。
+            strSettingContents = loadFile(strFilePath);
+            if (strSettingContents != null) // fileあり。
             {
                 // 読み込み反映
-                foreach (string strSettingLine in strSettingAll.Split("\r\n"))
+                foreach (string strSettingLine in strSettingContents.Split("\r\n"))
                 {
                     string strRight, strLeft;
                     if (strSettingLine.IndexOf('=') < 0) continue;
@@ -166,6 +176,8 @@ namespace ChatPalette
             {
                 strLastDirectoryPath = System.Environment.GetFolderPath(Environment.SpecialFolder.Personal);
             }
+            //初期1tabを作成
+            makeNewTab("Tab",null);
         }
 
         /// <summary>
@@ -216,9 +228,11 @@ namespace ChatPalette
         #endregion
 
         #region ChatPalette関係
-        public void lordChatPaletteFile()
+        public bool lordChatPaletteFile()
         {
             string strFilePath = null;
+            string strFileContents = null;
+
             var dlg = new Microsoft.Win32.OpenFileDialog();
             dlg.DefaultExt = ".txt";
             dlg.Filter = "テキストファイル(.txt)|*.txt|チャットパレットファイル(.json)|*.json|チャットパレットファイル(.cpd)|*.cpd|全てのファイル(*.*)|*.*";
@@ -229,16 +243,25 @@ namespace ChatPalette
                 strFilePath = dlg.FileName;
                 this.IsEnabled = true;
             }
+
+            //ファイルを読み取る
+            strFileContents = loadFile(strFilePath);
+            if (strFileContents == null)
+            {
+                setWindowTitle("ファイルを読み込めませんでした。");
+                return false;
+            }
+            //拡張子に応じた処理
             if (strFilePath != null)
                 try
                 {
                     switch (strFilePath.Substring(strFilePath.LastIndexOf('.')))
                     {
                         case ".txt":
-                            setChatPaletteFromTextFile(strFilePath);
+                            setChatPaletteFromTextFile(strFileContents);
                             break;
                         case ".json":
-                            setChatPaletteFromJsonFile(strFilePath);
+                            setChatPaletteFromJsonFile(strFileContents);
                             break;
                         case ".cpd":
                             break;
@@ -250,39 +273,41 @@ namespace ChatPalette
                 {
                     MessageBox.Show("Error LoadChatPaletteFile"+ e.ToString());
                 }
+            setWindowTitle(dlg.SafeFileName);
+            ((TabItem)TabControl.Items[0]).IsSelected = true;
+            return true;
         }
 
-        public bool setChatPaletteFromTextFile(string strFilePath) 
+        public bool setChatPaletteFromTextFile(string strFileContents) 
         {
-            string strFileAll = null;
-            if (!loadFileAll(strFilePath, out strFileAll)) 
-                return false;
             DeleteAllTabs();
-            makeNewTab(null, strFileAll);
+            makeNewTab("tab", strFileContents);
             return true; 
         }
 
         /// <summary>
         /// Jsonファイルからチャットパレットを読み込む。Tekeyの形式を採用
         /// </summary>
-        /// <param name="strFilePath"></param>
+        /// <param name="strFileContents">読み込んだファイルの中身</param>
         /// <returns></returns>
-        public bool setChatPaletteFromJsonFile(string strFilePath)
+        public bool setChatPaletteFromJsonFile(string strFileContents)
         {
-            string strFileAll=null;
-            if (!loadFileAll(strFilePath, out strFileAll))
-            {
-                MessageBox.Show(strFilePath + "\nFileを開けませんでした。");
-                return false;
-            }
             DeleteAllTabs();
-
-            SaveData sd = new SaveData();
-            sd = JsonSerializer.Deserialize<SaveData>(strFileAll);
-
-            foreach (DataChatPalette varTemp in sd.palettes)  //各タブの処理
+            try
             {
-                makeNewTab(varTemp.label, varTemp.stock);
+                SaveData sd = new SaveData();
+                sd = JsonSerializer.Deserialize<SaveData>(strFileContents);
+
+                foreach (DataChatPalette varTemp in sd.palettes)  //各タブの処理
+                {
+                    makeNewTab(varTemp.label, varTemp.stock);
+                }
+            }
+            catch
+            {
+                MessageBox.Show("ファイルの中身が見つかりませんでした。");
+                makeNewTab(null, null);
+                return false;
             }
             return true;
         }
@@ -302,11 +327,12 @@ namespace ChatPalette
             for (int i = 0; i < intTabCount; i++) 
             {
                 sd.palettes[i] = new DataChatPalette();
-                TabItem tabTemp = (TabItem)TabControl.Items[i];
+                //TabItem tabTemp = (TabItem)TabControl.Items[i];
+                //TextBox tempTextBox = ((TextBox)tabTemp.Content);
                 sd.palettes[i].paletteID = i + 1;
                 sd.palettes[i].order = i;
-                sd.palettes[i].label = tabTemp.Header.ToString();
-                sd.palettes[i].stock = composeLines(i);
+                sd.palettes[i].label = ((TabItem)TabControl.Items[i]).Header.ToString();
+                sd.palettes[i].stock = ((TextBox)((TabItem)TabControl.Items[i]).Content).Text;
                 sd.palettes[i].textColor = "#000000";
             }
 
@@ -377,8 +403,7 @@ namespace ChatPalette
         {
             if (TabControl.Items.Count > 0 && TabControl.SelectedIndex >= 0)
             {
-                TabItem tab = (TabItem)TabControl.Items[TabControl.SelectedIndex];
-                return tab.Header.ToString();
+                return ((TabItem)TabControl.Items[TabControl.SelectedIndex]).Header.ToString();
             }
             return "";
         }
@@ -796,35 +821,6 @@ namespace ChatPalette
                     for (int i = 0; i < intCount; i++)
                         tempStack.Children.RemoveAt(0);
             }
-        }
-
-
-        /// <summary>
-        /// Linesの文章を取得、一つの文章にして返す。
-        /// </summary>
-        /// <param name="intTabIndex">取得したいタブのインデックス</param>
-        /// <returns></returns>
-        public string composeLines(int intTabIndex)
-        {
-            string strLines = null;
-
-            //現在選択中のタブのStackPanelを取得する。
-            if (TabControl.Items.Count > 0 && TabControl.Items.Count >= intTabIndex && intTabIndex >= 0 )
-            {
-                var selectedTabItem = (TabItem)TabControl.Items[intTabIndex];
-                var tempScroll = (ScrollViewer)selectedTabItem.Content;
-                var tempStack = (StackPanel)tempScroll.Content;
-
-
-                for (int i = 0; i < tempStack.Children.Count; i++)
-                {
-                    Button tempBtn = (Button)tempStack.Children[i];
-                    strLines += tempBtn.Content.ToString();
-
-                    if (i != tempStack.Children.Count - 1) strLines += "\n";
-                }
-            }
-            return strLines;
         }
 
         #region Button関係
