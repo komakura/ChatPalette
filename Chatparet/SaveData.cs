@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chatparet
+namespace ChatPalette
 {
+
     class SaveData
     {
         public DataChatPalette[] palettes { get; set; }

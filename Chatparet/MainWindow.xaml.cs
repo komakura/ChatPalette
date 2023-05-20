@@ -17,7 +17,7 @@ using System.Text.Json;
 using System.Text.Unicode;
 using System.Text.Encodings.Web;
 
-namespace Chatparet
+namespace ChatPalette
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -352,8 +352,6 @@ namespace Chatparet
             {
                 writer.Write(strWrite);
             }
-
-
                 return;
         }
 
@@ -793,9 +791,6 @@ namespace Chatparet
                 Clipboard.SetData(DataFormats.Text, text);
             }
         }
-
-       
-
 
         /// <summary>
         /// 現在選択されているタブのStackPanelにLineを作る。
