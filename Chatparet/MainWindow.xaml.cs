@@ -24,15 +24,11 @@ namespace ChatPalette
     /// </summary>
     public partial class MainWindow : Window
     {
-        //Dictionary<string, string> dicKeyPairs;
-        //Lines辞書(変数を登録する辞書)を登録する辞書
-        private Dictionary<string, Dictionary<string, string>> TabsDictionary;
         string strLastDirectoryPath;
 
         public MainWindow()
         {
             InitializeComponent();
-            TabsDictionary = new Dictionary<string, Dictionary<string, string>>();
             lordInit();
             setWindowTitle("Chat Palette");
         }
@@ -408,202 +404,6 @@ namespace ChatPalette
             return "";
         }
 
-
-        /// <summary>
-        /// 文章をtextBoxに代入する。
-        /// 変数処理関数を呼び出している。
-        /// </summary>
-        private void setToTextBox(string strSetSentence)
-        {
-            strSetSentence = tryReplase(strSetSentence);
-            textbox.Text = strSetSentence;
-        }
-
-        #endregion
-
-        #region Dictionary関係
-
-        /// <summary>
-        /// 変数用の辞書を作成する。タブが作成されたときに使う。
-        /// </summary>
-        /// <param name="strTabName">作成するタブ名</param>
-        public void makeNewLinesDictionary(string strTabName)
-        {
-            try
-            {
-                TabsDictionary.Add(strTabName, new Dictionary<string, string>());
-            }
-            catch (ArgumentNullException)
-            {
-                MessageBox.Show("新しい辞書名がNullです。");
-            }
-            catch (ArgumentException)
-            {
-                MessageBox.Show("新しい辞書を登録できませんでした。");
-            }
-        }
-
-        /// <summary>
-        /// TabsDictionaryにstrChackNameがあるかどうか確認する。
-        /// </summary>
-        /// <param name="strChackName"></param>
-        /// <returns></returns>
-        public bool checkTabsDictionaryName(string strChackName)
-        {
-            if (TabsDictionary.ContainsKey(strChackName))
-            {
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Tas辞書に登録されている辞書を消す。タブを消すときに使用する。
-        /// </summary>
-        /// <param name="strClearLinesDictionaryName">Tabs辞書に登録されているLines辞書の名前</param>
-        /// <returns></returns>
-        public bool ClearLinesDictionary(string strClearLinesDictionaryName)
-        {
-            Dictionary<string, string> dicTemp;
-            try
-            {
-                if (TabsDictionary.TryGetValue(strClearLinesDictionaryName, out dicTemp))
-                {
-                    dicTemp.Clear();
-                    return true;
-                }
-            }
-            catch (ArgumentException)
-            {
-                MessageBox.Show("削除を試みた辞書" + strClearLinesDictionaryName + "は見つかりませんでした。");
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 変数を辞書から調べる。
-        /// </summary>
-        /// <param name="strTabName">調べるタブ名</param>
-        /// <param name="searchKey">調べる変数名</param>
-        /// <returns>変数の変換後の文章</returns>
-        public string getValueFromLinesDictionary(string strTabName, string searchKey)
-        {
-            string strReturn = null;
-            Dictionary<string, string> dicTemp;
-            try
-            {
-                if (TabsDictionary.TryGetValue(strTabName, out dicTemp))
-                {
-                    if (dicTemp.TryGetValue(searchKey, out strReturn))
-                    {
-                        return strReturn;
-                    }
-                    MessageBox.Show("TabNameは一致した。変数変換は一致しなかった");
-                }
-                MessageBox.Show("TabNameは一致しなかった。");
-                return strReturn;
-            }
-            catch (ArgumentException)
-            {
-                // strTabName == null
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// 変数を辞書に登録する。
-        /// </summary>
-        /// <param name="strTabName">登録するタブ名</param>
-        /// <param name="strSetKey">登録する変数名</param>
-        /// <param name="strSetValue">登録する変換後名</param>
-        /// <returns></returns>
-        public bool setWordToLinesDictionary(string strTabName, string strSetKey, string strSetValue)
-        {
-            Dictionary<string, string> dicTemp;
-            try
-            {
-                if (TabsDictionary.TryGetValue(strTabName, out dicTemp))
-                {
-                    try
-                    {
-                        dicTemp.Add(strSetKey, strSetValue);
-                        return true;
-                    }
-                    catch (ArgumentException)
-                    {
-                        MessageBox.Show("登録不可:" + strSetKey + "=" + strSetValue + "は登録できません。");
-                        return false;
-                    }
-                }
-                MessageBox.Show("タブ名が合致しませんでした。");
-                return false;
-            }
-            catch (ArgumentException)
-            {
-                //strTabName == null
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Tabs辞書に登録されている変数辞書の名前を変更する。
-        /// </summary>
-        /// <param name="strOldTabName">変更前の辞書名</param>
-        /// <param name="strNewTabName">変更後の辞書名</param>
-        /// <returns></returns>
-        public bool changeLinesDictionaryTabName(string strOldTabName, string strNewTabName)
-        {
-            Dictionary<string, string> tempDictionary;
-            try
-            {
-                if (TabsDictionary.TryGetValue(strOldTabName, out tempDictionary))
-                {
-                    try
-                    {
-                        TabsDictionary.Add(strNewTabName, tempDictionary);
-                        TabsDictionary.Remove(strOldTabName);
-                        return true;
-                    }
-                    catch (ArgumentException)
-                    {
-                        MessageBox.Show("重複登録:" + strNewTabName + "は登録できません。");
-                        return false;
-                    }
-                }
-                MessageBox.Show("変えようとしたタブ" + strOldTabName + "は見つかりません。");
-                return false;
-            }
-            catch (ArgumentException)
-            {
-                MessageBox.Show("変えようとしたタブ" + strOldTabName + "はNullでした。");
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Tabs辞書に登録されているLines辞書を削除する。タブを削除するときに使う。
-        /// </summary>
-        public void deleteLinesDictionary(string strDeleteLinesDictionaryName)
-        {
-            Dictionary<string, string> tempDictionary;
-            try
-            {
-                if (TabsDictionary.TryGetValue(strDeleteLinesDictionaryName, out tempDictionary))
-                {
-                    try
-                    {
-                        if (!TabsDictionary.Remove(strDeleteLinesDictionaryName))
-                            MessageBox.Show(strDeleteLinesDictionaryName + "タブは削除できませんでした。");
-                    }
-                    catch (ArgumentNullException)
-                    {
-                        MessageBox.Show("削除するタブ名を入れてください。");
-                    }
-                }
-            }
-            catch (ArgumentException) { MessageBox.Show(strDeleteLinesDictionaryName + "タブは削除できませんでした。"); }
-        }
-
         #endregion
 
 
@@ -648,13 +448,12 @@ namespace ChatPalette
             if (TabControl.Items.Count > 0 && TabControl.SelectedIndex >= 0)
             {
                 TabItem tab = (TabItem)TabControl.Items[TabControl.SelectedIndex];
-                deleteLinesDictionary(tab.Header.ToString());
                 TabControl.Items.RemoveAt(TabControl.SelectedIndex);
             }
         }
 
         /// <summary>
-        /// 全てのタブを削除する。Lines辞書も全て削除する。
+        /// 全てのタブを削除する。
         /// </summary>
         public void DeleteAllTabs() 
         {
@@ -662,136 +461,12 @@ namespace ChatPalette
                 for (int i = 0; i < intCountToDelete; i++)
                 {
                     TabItem tabTemp = (TabItem)TabControl.Items[0];
-                    deleteLinesDictionary(tabTemp.Header.ToString());
                     TabControl.Items.RemoveAt(0);
                 }
         } 
 
         #endregion
 
-
-        /// <summary>
-        /// 一行を辞書登録のKeyとValueにパースする。
-        /// </summary>
-        /// <param name="strRagis">パースする文章。//"Key"="value"</param>
-        /// <param name="key">変数を格納する</param>
-        /// <param name="value">値を格納する</param>
-        public void parseString(string strRagis, ref string key, ref string value)
-        {
-            try
-            {
-                key = strRagis.Substring(2);
-                key = key.Substring(0, key.IndexOf("="));
-                value = strRagis.Substring(strRagis.IndexOf("="));
-                value = value.TrimStart('=');
-            }
-            catch (ArgumentException e)
-            {
-                MessageBox.Show("ParseString：" + e.ToString());
-            }
-        }
-
-
-        /// <summary>
-        /// Linesをマウスでクリックして離した時の処理
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void _double_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            TextBlock textBlock;
-            if (!(sender is TextBlock)) return;
-            textBlock = (TextBlock)sender;
-            textbox.Text = textBlock.Text;
-        }
-
-
-        /// <summary>
-        /// 変数があるか調べ、ある場合は
-        /// </summary>
-        /// <param name="strOrg"></param>
-        /// <param name="strCheckWord"></param>
-        /// <returns></returns>
-        public string tryReplase(string strOldSentence)
-        {
-            Dictionary<string, string> tempDic;
-            string strTabName, strNewSentence = null, strReword, strDictionaryKey, strDictionaryValue=null;
-            int intIndexBegin, intIndexEnd;
-            bool isLoopTimes;
-
-            strTabName = getSelectedTabName();
-            do
-            {
-                isLoopTimes = false;
-                if (strOldSentence == "" || strOldSentence == null)
-                    break;
-
-                //{変数}はあるか？
-                intIndexBegin = strOldSentence.IndexOf("{");
-                if (intIndexBegin >= 0)
-                {
-                    intIndexEnd = strOldSentence.IndexOf("}");
-                    if (intIndexBegin < intIndexEnd) // intIndexが0以上であるかを確認する必要はない。intIndexStartがこの時点で0以上であるため。 
-                    {
-                        strReword = strOldSentence.Substring(intIndexBegin, intIndexEnd + 1 - intIndexBegin);
-                        strDictionaryKey = strReword.Substring(1, strReword.IndexOf("}") - 1);
-                        if (strReword.IndexOf("@") >= 0)
-                        {
-                            strTabName = strReword.Substring(strReword.IndexOf("@"));
-                            strTabName = strTabName.TrimStart('@');
-                            strTabName = strTabName.TrimEnd('}');
-                            strDictionaryKey = strReword.Substring(1, strReword.IndexOf("@") - 1);
-                        }
-
-                        // 変数変換可能か
-                        try
-                        {
-                            bool isExchange = TabsDictionary.TryGetValue(strTabName, out tempDic);
-                            if (isExchange) // Lines辞書が見つからない場合、変数探索は行わない。
-                                isExchange = tempDic.TryGetValue(strDictionaryKey, out strDictionaryValue);
-                            if (isExchange)
-                            {
-                                strNewSentence += strOldSentence.Substring(0, intIndexEnd + 1); // {までを切り渡す
-                                strNewSentence = strNewSentence.TrimEnd('\r');
-                                strOldSentence = strOldSentence.Substring(intIndexEnd + 1); // {までを切り捨てる
-                                strNewSentence = strNewSentence.Replace(strReword, strDictionaryValue);
-                                isLoopTimes = true;
-                            }
-                            else
-                            {
-                                // MessageBox.Show("変数変換出来ませんでした。");
-                                strNewSentence += strOldSentence.Substring(0, intIndexEnd + 1); // {までを切り渡す
-                                strOldSentence = strOldSentence.Substring(intIndexEnd + 1); // {までを切り捨てる
-                                isLoopTimes = true;
-                            }
-
-                        }
-                        catch (ArgumentNullException e)
-                        {
-                            break;
-                        }
-                        catch (ArgumentException e)
-                        {
-                            break;
-                            MessageBox.Show("Error");
-                        }
-
-                    }
-                    else // {はあったけど、｝はなかった
-                    {
-                        strNewSentence += strOldSentence.Substring(0, intIndexBegin + 1);
-                        strOldSentence = strOldSentence.Substring(intIndexBegin + 1);
-                        isLoopTimes = true;
-                    }
-                }
-                else //{はなかった。
-                {
-                    strNewSentence += strOldSentence;
-                    break;
-                }
-            } while (isLoopTimes);
-            return strNewSentence;
-        }
 
         /// <summary>
         /// 新しいタブを作成し
@@ -824,17 +499,6 @@ namespace ChatPalette
         }
 
         #region Button関係
-
-        /// <summary>
-        /// Linesに設定するボタン操作。テキストボックスに名前を移す。
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btnCopyToClip(object sender, RoutedEventArgs e)
-        {
-            Button tempBtn = (Button)sender;
-            setToTextBox(tempBtn.Content.ToString());
-        }
 
         /// <summary>
         /// セーブボタンの関数。saveChatPalette関数を呼び出すだけ。
