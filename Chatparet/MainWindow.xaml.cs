@@ -372,37 +372,6 @@ namespace ChatPalette
 
         #region Getter Setter
 
-        /// <summary>
-        /// 選択されているタブの名前を変更する。
-        /// タブ名の変更に合わせて辞書名の変更も行え。Call ChangeLinesDictyonary
-        /// </summary>
-        /// <param name="setName"></param>
-        /// <returns></returns>
-        public int setSelectedTabName(string setName)
-        {
-            if (TabControl.Items.Count > 0 && TabControl.SelectedIndex >= 0)
-            {
-                TabItem tab = (TabItem)TabControl.Items[TabControl.SelectedIndex];
-                if (tab.Header.ToString() != setName)
-                {
-                    tab.Header = setName;
-                }
-            }
-            return 0;
-        }
-
-        /// <summary>
-        /// 選択されているタブの名前を取得する関数。
-        /// </summary>
-        /// <returns>string 選択されているタブの名前を返す</returns>
-        public string getSelectedTabName()
-        {
-            if (TabControl.Items.Count > 0 && TabControl.SelectedIndex >= 0)
-            {
-                return ((TabItem)TabControl.Items[TabControl.SelectedIndex]).Header.ToString();
-            }
-            return "";
-        }
 
         #endregion
 
@@ -463,7 +432,64 @@ namespace ChatPalette
                     TabItem tabTemp = (TabItem)TabControl.Items[0];
                     TabControl.Items.RemoveAt(0);
                 }
-        } 
+        }
+
+        /// <summary>
+        /// 選択されているタブの名前を変更する。
+        /// </summary>
+        /// <param name="setName"></param>
+        /// <returns></returns>
+        public int setSelectedTabName(string setName)
+        {
+            if (TabControl == null) return 0;//タブを作成されている。
+            if (TabControl.Items.Count > 0 && TabControl.SelectedIndex >= 0)
+            {
+                TabItem tab = (TabItem)TabControl.Items[TabControl.SelectedIndex];
+                if (tab.Header.ToString() != setName)
+                {
+                    tab.Header = setName;
+                }
+            }
+            return 1;
+        }
+
+        /// <summary>
+        /// 選択されているタブの名前を取得する関数。
+        /// </summary>
+        /// <returns>string 選択されているタブの名前を返す</returns>
+        public string getSelectedTabName()
+        {
+            if (TabControl.Items.Count > 0 && TabControl.SelectedIndex >= 0)
+            {
+                return ((TabItem)TabControl.Items[TabControl.SelectedIndex]).Header.ToString();
+            }
+            return "";
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void textbox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            setSelectedTabName(((TextBox)sender).Text);
+        }
+
+        /// <summary>
+        /// タブが選択されたら呼び出される。
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (TabControl == null) return;
+            //選択されたタブの名前をBoxに設定する。
+            textbox.Text = getSelectedTabName();
+            return;
+        }
+
 
         #endregion
 
@@ -546,5 +572,6 @@ namespace ChatPalette
         {
             this.Topmost = !this.Topmost;
         }
+
     }
 }

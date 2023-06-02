@@ -16,9 +16,9 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TextBox x:Name="textbox" Text="TextBox" Grid.Column="0" TextWrapping="NoWrap" FontSize="20" AcceptsReturn="True" AcceptsTab="True"/>
+            <TextBox x:Name="textbox" Text="TextBox" Grid.Column="0" TextWrapping="NoWrap" FontSize="20" AcceptsReturn="True" AcceptsTab="True" TextChanged="textbox_TextChanged"/>
         </Grid>
-        <TabControl x:Name="TabControl" Grid.Row="1">
+        <TabControl x:Name="TabControl" Grid.Row="1" SelectionChanged="TabControl_SelectionChanged">
         </TabControl>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
